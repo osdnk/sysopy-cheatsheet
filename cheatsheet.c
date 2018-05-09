@@ -119,3 +119,81 @@ void masker() {
 //    clock_t times(struct tms *buf);
 
 
+// checking types of files
+// Do not forget about S_ISREG, S_ISLINK
+
+
+void piper() {
+
+        int toChildFD[2];
+        int toParentFD[2];
+
+        pipe(toChildFD);
+        pipe(toParentFD);
+
+        int val1,val2,val3 = 0;
+
+        pid_t pid;
+        if((pid = fork()) == 0) {
+
+            read(toChildFD[0], &val2, sizeof(int));
+
+            val2 = val2 * val2;
+
+            write(toParentFD[1], &val2, sizeof(int));
+
+        } else {
+
+            val1 = atoi(argv[1]);
+            write(toChildFD[1], &val1, sizeof(int));
+
+            sleep(1);
+
+            read(toParentFD[0], &val3, sizeof(int));
+
+
+            printf("%d square is: %d\n",val1, val3);
+        }
+
+}
+
+// in order to exec file
+if(pid == 0) {
+execvp(parameters[0], parameters);
+exit(1);
+}
+
+
+//handle dir like
+void diro(char *path, char *operant, time_t date) {
+    if (path == NULL)
+        return;
+    DIR *dir = opendir(path);
+
+
+    if (dir == NULL) {
+        printf("%s\n", "error!");
+        return;
+    }
+
+    struct dirent *rdir = readdir(dir);
+    struct stat file_stat;
+
+    char new_path[PATH_MAX];
+
+    while (rdir != NULL) {
+        strcpy(new_path, path);
+        strcat(new_path, "/");
+        strcat(new_path, rdir->d_name);
+
+
+        lstat(new_path, &file_stat); // with symlinks
+
+        if (strcmp(rdir->d_name, ".") == 0 || strcmp(rdir->d_name, "..") == 0) {
+            rdir = readdir(dir);
+            continue;
+        }
+        //...
+    }
+    closedir(dir);
+}
