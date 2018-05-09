@@ -44,7 +44,6 @@ The  sa_restorer  field  is  not  intended  for application use.  (POSIX does no
 
 
 // malloc && calloc
-
 void mallocer () {
     int ** a = malloc(sizeof (int*) * N);
     for (i = 0; i < N; i++) {
@@ -77,8 +76,46 @@ void filer () {
     close(target);
     free(tmp);
     return 0;
+}
+
+// sigaction
+
+void intHandler(int signum, siginfo_t *info, void *context) {
+    WRITE_MSG("\rMother: Received SIGINT\n");
 
 }
 
+void sigationer() {
+    struct sigaction act;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_SIGINFO;
+
+    act.sa_sigaction = intHandler;
+    if (sigaction(SIGINT, &act, NULL) == -1) FAILURE_EXIT(1, "Can't catch SIGINT\n");
+
+
+    // sending value
+    union sigval sv;
+    sv.sival_int=2137;
+    // int kill(pid_t pid, int sig) -- that seems to easier
+    sigqueue(child, SIGUSR1, sv);
+};
+
+// receiving extra data
+void sighandler (int signo, siginfo_t * t, void * c) {
+    printf("%d", t->si_value.sival_int);
+}
+
+// masking signals
+void masker() {
+    sigset_t s;
+    sigfillset(&s);
+    sigdelset(&s, SIGUSR1);
+    sigprocmask(SIG_BLOCK, &s, NULL);
+};
+
+
+// times works like
+//    clock_t times(struct tms *buf);
 
 
